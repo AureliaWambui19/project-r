@@ -1,0 +1,372 @@
+---
+title: "lily"
+output:
+  html_document: default
+  pdf_document: default
+---
+# Introduction
+
+## 1.1 Defining the Question
+identify which individuals who are most likely to click an ad
+
+## 1.2 context
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ my services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads
+
+## 1.3 Metrics for success
+Getting to know which are the factors/features/variables that have the highest impact on the decision of a user clicking an ad 
+
+## 1.4 Experimental design
+*Installing packages and loading libraries needed
+*Data understanding
+*Data preparation
+*EDA
+*Conclusions
+
+##1.5 Appropriateness of the Data
+The link of the dataset is http://bit.ly/IPAdvertisingData
+
+#2Data understanding
+
+##2.1Loading libraries and package
+
+```{r}
+# Install package data.table
+install.packages("data.table")
+```
+
+```{r}
+library(data.table) # load package
+```
+```{r}
+install.packages("tidyverse") # install packages to work with data frame - extends into visualization
+```
+```{r}
+library(tidyverse) 
+```
+
+```{r}
+
+install.packages("ggcorrplot")
+```
+```{r}
+library(ggcorrplot) 
+```
+
+##2.2Loading dataset
+
+```{r}
+advert <- fread('http://bit.ly/IPAdvertisingData')
+```
+
+
+##2.3 previewing the dataset
+
+```{r}
+# Viewing the top observations
+head(advert)
+```
+```{r}
+# Viewing the bottom observations
+tail(advert)
+```
+```{r}
+# Checking the number of rows and columns
+dim(advert)
+```
+there are 1000 rows and 10 columns
+```{r}
+# checking the types of attributes (columns)
+
+sapply(advert, class)
+```
+
+```{r}
+# checking the summary statistics of the dataset 
+
+summary(advert)
+```
+
+Minimum age is 19,median ageis 35,mean age is 36.01,max age is 61,1st and 3rd quartile is 29 and 42 respectively
+```{r}
+# Summary information of the dataset
+glimpse(advert)
+```
+
+```{r}
+# Summary information of the dataset
+str(advert)
+```
+glimpse and str shows the datatypes of each column and a few observations.
+
+#3Data preparation
+
+## 3.1missing data
+
+```{r}
+
+# Checking for missing values by columns
+
+colSums(is.na(advert))
+```
+```{r}
+# Checking for missing for the whole dataset
+sum(is.na(advert))
+```
+Both checks columnwise and as whole indicates there are no missing values
+
+## 3.2duplicates
+
+```{r}
+# Checking for duplicates,which function checks and displays rows with duplicates though it only reports on the first instance of a duplicate report
+which(duplicated(advert))
+```
+```{r}
+# Checking for duplicatesrows
+duplicated_rows <- advert[duplicated(advert),]
+duplicated_rows
+```
+From the two checks ,it is observed that there are no duplicates
+
+## 3.3Rectifing name system of the columns
+
+```{r}
+# Checking the column names
+names(advert)
+# Replacing spaces in the columns names with an underscore
+names(advert) <- gsub(" ", "_", names(advert))
+# Confirming the columns names have changed
+names(advert) 
+```
+
+## 3.4Outliers
+
+```{r}
+
+glimpse(advert)
+```
+```{r}
+boxplot(advert$Daily_Time_Spent_on_Site,col = "pink",main = "daily time spent on site",border = "brown",xlab="time",horizontal = T)
+
+```
+
+```{r}
+boxplot(advert$Age,col = "pink",main = "age boxplot",border = "brown",xlab="age",horizontal = T)
+
+```
+```{r}
+boxplot(advert$Area_Income,col = "pink",main = "area income boxplot",border = "brown",xlab="income",horizontal = T)
+
+```
+```{r}
+boxplot(advert$Daily_Internet_Usage,col = "pink",main = "daily internetusage boxplot",border = "brown",xlab="internet usage",horizontal = T)
+
+```
+```{r}
+boxplot(advert$Male,col = "pink",main = "male boxplot",border = "brown",xlab="male",horizontal = T)
+
+```
+```{r}
+boxplot(advert$Clicked_on_Ad,col = "pink",main = "clicked on add boxplot",border = "brown",xlab="cicked add",horizontal = T )
+
+```
+
+
+
+It is observed that its only area income that has outliers ,however i will not delete them at this point in time since upon further investigation could help the Kenyan entrepreneur to customize cerain aspects of the crypography course eg fee payment mode  (to those customers whose income is below 20000) so as to attract as many customers as possible.This could possibly be achieved either by may be having a possibility of paying the fees in installments
+
+#4 EDA
+
+##4.1 Univariate
+
+```{r}
+summary(advert)
+```
+Summary function displays statistics such as min,mean etc
+for example from the output we can see that min,1st quartile,median,mean,3rdquartile and maxof daily internet usage is 104.8,138.8,183.1,180.0,218.8,270.0 respectively
+```{r}
+# altenatively one can get specific details by using various specific functions sich as mean,min,max,median,sd,quartile etc except mode which one has to create a function for
+# example below is for finding mean of age
+advertmean <- mean(advert$Age)
+advertmean
+```
+The mean of age is 'r mean(advert$Age)'
+```{r}
+# example below is for max Daily_Time_Spent_on_Site
+advertmax <- max(advert$Daily_Time_Spent_on_Site)
+advertmax
+```
+the max time spent on site is 'r max(advert$Daily_Time_Spent_on_Site)'
+
+
+
+```{r}
+advertvar <- var(advert$Area_Income)
+advertvar
+```
+The variance for  area income is very high which means the datapoints are very far from the mean which is 55000
+```{r}
+advertsd <- sd(advert$Area_Income)
+
+
+advertsd
+```
+The stand deviation for  area income is very low which means the datapoints are very close to the mean which is 55000
+
+```{r}
+advertrange <- range(advert$Daily_Internet_Usage)
+
+# Printing out the variable advertrange  to show the range 
+# ---
+#
+advertrange
+```
+The range of daily internet usage is between 104.78 to 269.96
+
+```{r}
+library(moments)
+
+skewness(advert$Daily_Time_Spent_on_Site)
+```
+The skewness here is -0.3712026. This value implies that the distribution of the data is slightly skewed to the left or negatively skewed. It is skewed to the left because the computed value is negative, and is slightly, because the value is close to zero.
+```{r}
+kurtosis(advert$Daily_Time_Spent_on_Site)
+```
+ Kurtosis is a measure of whether the distribution is too peaked
+
+"When both skewness and kurtosis are zero  the pattern of responses is considered a normal distribution.  For kurtosis, the general guideline is that if the number is greater than +1, the distribution is too peaked. Likewise, a kurtosis of less than –1 indicates a distribution that is too flat.
+
+in our case the kurtosis level is 1.903942indicating a highly peaked data
+```{r}
+# getting a frequency table of clicks on ads
+clicks <- advert$Clicked_on_Ad
+
+# Applying the table() function will compute the frequency distribution of the clicks variable
+# ---
+# 
+clicks.frequency<- table(clicks)
+
+# Printing clicks below
+# ---
+#
+
+clicks.frequency
+```
+
+```{r}
+clicks.frequency<- table(clicks)
+barplot(clicks.frequency,
+  main="A bar chart showing Clicked on Ad distribution",
+  xlab="Clicked on Ad or Not",
+  ylab = "Frequency",
+  col=c("pink","blue"),
+  legend = rownames(clicks.frequency))
+```
+
+
+the dataset doesnt suffer from class imbalance since those who clicked the ad and those who didnt were equal at 500 each
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+# Calculating the mode using out getmode() function
+# ---
+#
+advertmode <- getmode(advert$Daily_Time_Spent_on_Site)
+
+# Then printing out Daily_Time_Spent_on_Site mode 
+advertmode
+```
+the Daily_Time_Spent_on_Site mode is 'r getmode(advert$Daily_Time_Spent_on_Site)'
+
+##4.2 Bivariate
+
+```{r}
+click.count <- table(advert$Clicked_on_Ad, advert$Age)
+barplot(click.count,
+  main="A stacked bar chart showing Clicked on Ad by Age",
+  xlab="Age",
+  ylab = "Frequency",
+  col=c("pink","blue"),
+  legend = rownames(click.count))
+```
+
+The highest age of the participants was 59 and lowest was 19.
+The people who cliked most on Ads were between age 28 to 36.
+
+```{r}
+click.count <- table(advert$Clicked_on_Ad, advert$Male)
+barplot(click.count,
+  main="A stacked bar chart showing Clicked on Ad by Gender",
+  xlab="Gender",
+  ylab = "Frequency",
+  col=c("pink","blue"),
+  legend = rownames(click.count))
+```
+```{r}
+uniquemale<-unique(advert$Male)
+uniquemale
+
+```
+Therr were slightly more females who clicked on the add as compared to males
+
+```{r}
+# Checking numeric columns
+sapply(advert, is.numeric)
+
+```
+```{r}
+# subsetting the numeric columns
+advertnumeric <- advert[, sapply(advert, is.numeric)]
+advertnumeric
+```
+```{r}
+adv<-advert%>% select_if(is.numeric)
+adv
+
+```
+```{r}
+# Calculate the correlations
+corr <- cor(adv)
+corr
+
+```
+```{r}
+ggcorrplot(round(corr, 1), 
+           type = "full", lab = T,hc.order = TRUE)
+```
+
+
+Several observations can be made
+* there are  highly ,low,moderate and no correlated items
++ the highest correlated is daily internet usage and daily internet usage as well as age and clicked on ad
++ there is no correlation in certain instances such as male and age
+* there are both instances of negative and positive correlations
++ area income and clickedon add have a negative correlation of -0.5
++ clicked on ad and age have a positive correlation of 0.5
+
+
+
+
+```{r}
+install.packages("corrplot")
+library(corrplot)
+```
+```{r}
+adv.cor = cor(adv)
+adv.cor
+```
+
+```{r}
+corrplot(adv.cor)
+```
+
+
+Positive correlations are displayed in a blue scale while negative correlations are displayed in a red scale.
+there are regions that dont have any scale eg male and age,an indicator that there is no correlation between the two
+
+#5 Conclusions
+
+1. Gender doesnt affect whether one clicks an ad
+2. age is a great factor that determines if a user clicks an ad ,it was observed that The people who cliked most on Ads were between age 28 to 36.To expand,the target audience among the different ages,the entreprenuer could deploy different methods eg to reach the 19-27 year old social media,influencer marketing would be best recommended while for the above 36year olds,affliate marketing and reviews would work best
